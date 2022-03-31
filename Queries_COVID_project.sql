@@ -1,9 +1,11 @@
+-- Imported excel data from https://ourworldindata.org/covid-deaths into SQL server 
+
 SELECT *
 FROM CovidProject..CovidVaccinations
 WHERE location = 'Canada'
 ORDER BY date desc;
 
--- data had duplicate entries
+-- data had duplicate entries on the date column. Approximately 5 extra entries per row.
 
 SELECT DISTINCT date, continent, location, total_cases, new_cases, total_deaths, population
 FROM CovidProject..CovidDeaths
@@ -44,7 +46,8 @@ GROUP BY location, population
 ORDER BY DeathPercentage DESC; 
 
 -- Continents with highest death count
--- Continent column showed incorrect data, Confirmed via Google that these numbers are approximately correct
+-- Continent column showed incorrect data, some locations not classified to the correct continent (North America not counting Canada)
+-- Confirmed via Google that these numbers are approximately correct
 
 SELECT location, max(cast(total_deaths as int)) as HighestDeathCount
 FROM CovidProject..CovidDeaths
@@ -54,6 +57,7 @@ GROUP BY location
 ORDER BY HighestDeathCount DESC; 
 
 -- Showing countries with highest death count
+
 SELECT location, max(cast(total_deaths as int)) as HighestDeathCount
 FROM CovidProject..CovidDeaths
 WHERE continent IS NOT NULL
@@ -81,7 +85,8 @@ JOIN CovidProject..CovidVaccinations v
 WHERE d.continent IS NOT NULL
 ORDER BY d.location, d.date;
 
--- Duplicate dates are misleading the data, causing aggregate functions to sum 5x the amount
+-- Duplicate dates are misleading the data, causing aggregate functions to sum 5x the amount.
+-- Using DISTINCT does not fix the issue, it only hides the duplicate data. Cleaning the data using a cte
 
 --WITH cte AS (
 --SELECT date, continent, location, total_cases, new_cases, total_deaths, new_deaths, population, ROW_NUMBER() OVER (PARTITION BY date, continent, location ORDER BY location, date) row_num
@@ -93,7 +98,7 @@ ORDER BY d.location, d.date;
 --ORDER BY location, date;
 
 -- Issue with multiple dates is now fixed, numbers running correctly
--- Rolling_vaccinations column counts multiple doses. Google confirmed Canada's doses administered at 81 million as of march 30, 2022
+-- Rolling_vaccinations column counts multiple doses. Multiple Google sources confirmed Canada's doses administered at 81 million as of march 30, 2022
 
 -- Using previous query again to correctly see the rolling total vaccinations per country and calculate percentage of rolling vaccinations vs population
 
